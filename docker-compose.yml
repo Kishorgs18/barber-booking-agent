@@ -1,0 +1,41 @@
+version: "3.8"
+
+services:
+
+  # ── Barbershop booking app ──────────────────────────────────────────────────
+  barber-app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./barber.db:/app/barber.db   # persist SQLite across restarts
+      - ./.env:/app/.env
+    environment:
+      BASE_URL: "http://localhost:8000"
+      N8N_WEBHOOK_BASE_URL: "http://n8n:5678/webhook"
+    depends_on:
+      - n8n
+    restart: unless-stopped
+
+  # ── N8N automation ──────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/workflows   # workflow files available inside N8N
+    environment:
+      # Basic auth to protect N8N UI
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: "admin"
+      N8N_BASIC_AUTH_PASSWORD: "admin123"
+      # Tell N8N its own URL (needed for webhook URLs to display correctly)
+      WEBHOOK_URL: "http://localhost:5678"
+      # Timezone — change to your barbershop's timezone
+      GENERIC_TIMEZONE: "Europe/London"
+      TZ: "Europe/London"
+    restart: unless-stopped
+
+volumes:
+  n8n_data:

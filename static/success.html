@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking Confirmed</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d0d; color: #f0ece4;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100dvh; display: flex;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .card {
+      background: #111; border: 1px solid #2a2a2a;
+      border-radius: 20px; padding: 40px 32px;
+      max-width: 480px; width: 100%; text-align: center;
+    }
+    .check {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; margin: 0 auto 20px;
+    }
+    h1   { font-size: 26px; color: #c9a84c; letter-spacing: 1px; margin-bottom: 6px; }
+    .sub { color: #888; font-size: 14px; margin-bottom: 28px; }
+
+    .details {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; padding: 18px; text-align: left; margin-bottom: 22px;
+    }
+    .row { display: flex; justify-content: space-between; padding: 7px 0;
+           border-bottom: 1px solid #222; font-size: 14px; }
+    .row:last-child { border-bottom: none; }
+    .row .label { color: #888; }
+    .row .val   { color: #f0ece4; font-weight: 600; }
+
+    /* Calendar buttons */
+    .cal-section { margin-bottom: 18px; }
+    .cal-section p { color: #888; font-size: 12px; margin-bottom: 10px; }
+    .cal-btns { display: flex; gap: 10px; }
+    .cal-btn {
+      flex: 1; display: block; padding: 11px 10px; border-radius: 10px;
+      text-decoration: none; font-size: 12px; font-weight: 700;
+      text-align: center; letter-spacing: .5px;
+    }
+    .gcal { background: #4285F4; color: #fff; }
+    .ical { background: #1a1a1a; border: 1px solid #333; color: #c9a84c; }
+
+    .email-notice {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;
+      padding: 12px 16px; font-size: 13px; color: #888;
+      margin-bottom: 18px; text-align: left;
+    }
+    .email-notice strong { color: #f0ece4; }
+
+    .btn-book {
+      display: block; background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      color: #0d0d0d; font-weight: 800; font-size: 14px;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 13px; border-radius: 10px; text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="check">✓</div>
+    <h1>You're All Set!</h1>
+    <p class="sub">Payment confirmed. See you at the chair.</p>
+
+    <div class="details" id="details">
+      <div class="row"><span class="label">Loading…</span></div>
+    </div>
+
+    <div class="cal-section">
+      <p>Add your appointment to your calendar:</p>
+      <div class="cal-btns">
+        <a id="gcal-btn" href="#" class="cal-btn gcal" target="_blank">📅 Google Calendar</a>
+        <a id="ical-btn" href="#" class="cal-btn ical">📁 Apple / Outlook (.ics)</a>
+      </div>
+    </div>
+
+    <div class="email-notice" id="email-notice" style="display:none">
+      📧 A confirmation email has been sent to <strong id="email-addr"></strong>
+    </div>
+
+    <a href="/" class="btn-book">Book Another →</a>
+  </div>
+
+<script>
+  localStorage.removeItem('bb_session');
+  localStorage.removeItem('bb_booking_id');
+
+  const params    = new URLSearchParams(window.location.search);
+  const bookingId = params.get('booking_id');
+
+  if (bookingId) {
+    fetch(`/api/booking/${bookingId}`)
+      .then(r => r.json())
+      .then(b => {
+        document.getElementById('details').innerHTML = `
+          <div class="row"><span class="label">Service</span><span class="val">${b.service_name}</span></div>
+          <div class="row"><span class="label">Date</span><span class="val">${b.booking_date}</span></div>
+          <div class="row"><span class="label">Time</span><span class="val">${b.booking_time}</span></div>
+          <div class="row"><span class="label">Name</span><span class="val">${b.customer_name}</span></div>
+          <div class="row"><span class="label">Paid</span><span class="val">£${Number(b.price_gbp).toFixed(2)} ✓</span></div>
+        `;
+
+        // Google Calendar link
+        const start = (b.booking_date + 'T' + b.booking_time + ':00').replace(/[-:]/g,'').replace('T','T');
+        const dur   = b.duration_minutes || 30;
+        const endDt = new Date(b.booking_date + 'T' + b.booking_time + ':00');
+        endDt.setMinutes(endDt.getMinutes() + dur);
+        const endStr = endDt.toISOString().replace(/[-:]/g,'').split('.')[0];
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE` +
+          `&text=${encodeURIComponent(b.service_name + ' — ' + (b.shop_name || 'Barbershop'))}` +
+          `&dates=${start}/${endStr}` +
+          `&details=${encodeURIComponent('Booking #' + b.id)}`;
+
+        document.getElementById('gcal-btn').href = gcalUrl;
+        document.getElementById('ical-btn').href = `/api/booking/${bookingId}/calendar.ics`;
+
+        // Show email notice if customer provided email
+        if (b.customer_email) {
+          document.getElementById('email-addr').textContent = b.customer_email;
+          document.getElementById('email-notice').style.display = 'block';
+        }
+      })
+      .catch(() => {
+        document.getElementById('details').innerHTML =
+          `<div class="row"><span class="label">Booking confirmed</span><span class="val">#${bookingId}</span></div>`;
+      });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Barber Bookings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f5f5f5; color: #1a1a1a;
+      font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #0d0d0d; border-bottom: 3px solid #c9a84c;
+      padding: 16px 24px; display: flex; align-items: center; gap: 14px;
+    }
+    header h1 { color: #c9a84c; font-size: 18px; font-weight: 800;
+                text-transform: uppercase; letter-spacing: 2px; }
+    header p  { color: #666; font-size: 12px; margin-top: 2px; }
+    header a  { margin-left: auto; color: #888; font-size: 13px;
+                text-decoration: none; }
+    header a:hover { color: #c9a84c; }
+
+    /* ── Login overlay ── */
+    #login-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center; z-index: 99;
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 36px;
+      width: 340px; text-align: center;
+    }
+    .login-card h2 { margin-bottom: 6px; font-size: 20px; }
+    .login-card p  { color: #888; font-size: 13px; margin-bottom: 20px; }
+    .login-card input {
+      width: 100%; padding: 11px 14px; border: 1px solid #ddd;
+      border-radius: 8px; font-size: 14px; outline: none;
+      margin-bottom: 12px;
+    }
+    .login-card input:focus { border-color: #c9a84c; }
+    .login-card button {
+      width: 100%; background: #c9a84c; color: #fff; border: none;
+      padding: 12px; border-radius: 8px; font-size: 15px;
+      font-weight: 700; cursor: pointer;
+    }
+    .login-card button:hover { background: #b8933e; }
+    .login-err { color: #e53935; font-size: 13px; margin-top: 8px; }
+
+    /* ── Main ── */
+    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+    /* Stats */
+    .stats { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat {
+      background: #fff; border-radius: 12px; padding: 18px 22px;
+      flex: 1; min-width: 130px; border-left: 4px solid #c9a84c;
+    }
+    .stat .num  { font-size: 30px; font-weight: 800; color: #0d0d0d; }
+    .stat .lbl  { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Filters */
+    .filters {
+      background: #fff; border-radius: 12px; padding: 16px 20px;
+      display: flex; gap: 12px; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .filters label { font-size: 13px; color: #888; }
+    .filters input[type="date"] {
+      padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px;
+      font-size: 13px; outline: none;
+    }
+    .filters input[type="date"]:focus { border-color: #c9a84c; }
+    .filters button {
+      padding: 8px 16px; border-radius: 8px; border: none;
+      font-size: 13px; cursor: pointer; font-weight: 600;
+    }
+    .btn-gold  { background: #c9a84c; color: #fff; }
+    .btn-ghost { background: #f0f0f0; color: #555; }
+
+    /* Table */
+    .table-wrap { background: #fff; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead { background: #0d0d0d; color: #c9a84c; }
+    thead th { padding: 13px 14px; text-align: left; font-size: 11px;
+               text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #f0f0f0; transition: background .1s; }
+    tbody tr:hover { background: #fafafa; }
+    tbody td { padding: 12px 14px; vertical-align: middle; }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .badge-confirmed    { background: #e8f5e9; color: #2e7d32; }
+    .badge-pending      { background: #fff8e1; color: #f57f17; }
+    .badge-cancelled    { background: #fce4ec; color: #c62828; }
+    .badge-completed    { background: #e3f2fd; color: #1565c0; }
+    .badge-paid         { background: #e8f5e9; color: #2e7d32; }
+    .badge-unpaid       { background: #fce4ec; color: #c62828; }
+
+    .actions button {
+      padding: 5px 10px; border: none; border-radius: 6px;
+      font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 5px;
+    }
+    .act-confirm  { background: #e8f5e9; color: #2e7d32; }
+    .act-cancel   { background: #fce4ec; color: #c62828; }
+    .act-complete { background: #e3f2fd; color: #1565c0; }
+
+    .empty { text-align: center; padding: 48px; color: #aaa; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- Login -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <h2>✂️ Admin Login</h2>
+      <p>Enter your admin password to continue</p>
+      <input type="password" id="pwd-input" placeholder="Password" onkeydown="if(event.key==='Enter')login()" />
+      <button onclick="login()">Sign In</button>
+      <p class="login-err" id="login-err"></p>
+    </div>
+  </div>
+
+  <header>
+    <div>
+      <h1 id="shop-name-h">Admin Dashboard</h1>
+      <p>Manage all bookings</p>
+    </div>
+    <a href="/">← Customer view</a>
+  </header>
+
+  <main>
+    <div class="stats">
+      <div class="stat"><div class="num" id="s-total">—</div><div class="lbl">Today's Bookings</div></div>
+      <div class="stat"><div class="num" id="s-paid">—</div><div class="lbl">Paid</div></div>
+      <div class="stat"><div class="num" id="s-pending">—</div><div class="lbl">Awaiting Payment</div></div>
+      <div class="stat"><div class="num" id="s-revenue">—</div><div class="lbl">Today's Revenue</div></div>
+    </div>
+
+    <div class="filters">
+      <label>Filter by date:</label>
+      <input type="date" id="date-filter" />
+      <button class="btn-gold" onclick="loadBookings()">Filter</button>
+      <button class="btn-ghost" onclick="clearFilter()">All Bookings</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Service</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+<script>
+  let adminPwd = '';
+  let allRows  = [];
+
+  // ── Login ──
+  function login() {
+    const p = document.getElementById('pwd-input').value;
+    // Validate against server
+    fetch(`/api/admin/bookings?password=${encodeURIComponent(p)}`)
+      .then(r => {
+        if (r.status === 401) throw new Error('Wrong password');
+        return r.json();
+      })
+      .then(data => {
+        adminPwd = p;
+        document.getElementById('login-overlay').style.display = 'none';
+        allRows = data;
+        renderToday();
+        loadShopName();
+      })
+      .catch(() => {
+        document.getElementById('login-err').textContent = 'Incorrect password.';
+      });
+  }
+
+  function loadShopName() {
+    fetch('/api/config').then(r=>r.json()).then(cfg => {
+      document.getElementById('shop-name-h').textContent = cfg.shop_name + ' — Admin';
+      document.title = cfg.shop_name + ' Admin';
+    });
+  }
+
+  // ── Today's stats ──
+  function renderToday() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayRows = allRows.filter(b => b.booking_date === today);
+    document.getElementById('s-total').textContent   = todayRows.length;
+    document.getElementById('s-paid').textContent    = todayRows.filter(b => b.payment_status === 'paid').length;
+    document.getElementById('s-pending').textContent = todayRows.filter(b => b.payment_status === 'unpaid').length;
+    const rev = todayRows.filter(b=>b.payment_status==='paid').reduce((a,b)=>a+b.price_gbp,0);
+    document.getElementById('s-revenue').textContent = '£' + rev.toFixed(0);
+
+    // Set date filter to today
+    document.getElementById('date-filter').value = today;
+    renderTable(todayRows);
+  }
+
+  // ── Load with date filter ──
+  function loadBookings() {
+    const d = document.getElementById('date-filter').value;
+    fetch(`/api/admin/bookings${d?'?date='+d:''}&password=${encodeURIComponent(adminPwd)}`)
+      .then(r => r.json())
+      .then(data => { allRows = data; renderTable(data); });
+  }
+
+  function clearFilter() {
+    document.getElementById('date-filter').value = '';
+    loadBookings();
+  }
+
+  // ── Render table ──
+  function renderTable(rows) {
+    const tbody = document.getElementById('tbody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="10" class="empty">No bookings found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(b => `
+      <tr id="row-${b.id}">
+        <td style="color:#aaa">#${b.id}</td>
+        <td>${b.booking_date}</td>
+        <td><strong>${b.booking_time}</strong></td>
+        <td>${b.customer_name}</td>
+        <td>${b.customer_phone}</td>
+        <td>${b.service_name}</td>
+        <td>£${Number(b.price_gbp).toFixed(2)}</td>
+        <td><span class="badge badge-${b.status}">${b.status.replace('_',' ')}</span></td>
+        <td><span class="badge badge-${b.payment_status}">${b.payment_status}</span></td>
+        <td class="actions">
+          ${b.status !== 'confirmed'  ? `<button class="act-confirm"  onclick="updateStatus(${b.id},'confirmed')">Confirm</button>`  : ''}
+          ${b.status !== 'completed'  ? `<button class="act-complete" onclick="updateStatus(${b.id},'completed')">Done</button>`     : ''}
+          ${b.status !== 'cancelled'  ? `<button class="act-cancel"   onclick="updateStatus(${b.id},'cancelled')">Cancel</button>`   : ''}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Update status ──
+  async function updateStatus(id, status) {
+    await fetch(`/api/admin/bookings/${id}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ status, password: adminPwd }),
+    });
+    loadBookings();
+  }
+
+  // ── Auto-refresh every 30s ──
+  setInterval(() => {
+    if (adminPwd) loadBookings();
+  }, 30000);
+</script>
+</body>
+</html>

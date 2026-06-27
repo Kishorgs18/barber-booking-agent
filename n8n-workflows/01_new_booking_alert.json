@@ -1,0 +1,58 @@
+{
+  "name": "Barber — 01 New Booking Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "barber-new-booking",
+        "responseMode": "onReceived",
+        "responseData": ""
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "New Booking Received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "=✂️ *NEW BOOKING — {{ $json.shop_name || 'Elite Cuts' }}*\n\n👤 *Customer:* {{ $json.customer_name }}\n📱 *Phone:* {{ $json.customer_phone }}\n💇 *Service:* {{ $json.service_name }}\n📅 *Date:* {{ $json.booking_date }}\n🕐 *Time:* {{ $json.booking_time }}\n💷 *Total:* £{{ $json.price_gbp }}\n🔖 *Booking #{{ $json.id }}*\n\n⏳ Awaiting payment confirmation.",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Alert Owner on Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "New Booking Received": {
+      "main": [
+        [
+          {
+            "node": "Alert Owner on Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

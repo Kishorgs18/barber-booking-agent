@@ -1,0 +1,105 @@
+{
+  "name": "Barber — 02 Payment Confirmed",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "barber-payment-confirmed",
+        "responseMode": "onReceived",
+        "responseData": ""
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000001",
+      "name": "Payment Confirmed Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $vars.TELEGRAM_CHAT_ID }}",
+        "text": "=💰 *PAYMENT RECEIVED!*\n\n✅ Booking #{{ $json.id }} is confirmed and paid.\n\n👤 {{ $json.customer_name }}\n💇 {{ $json.service_name }}\n📅 {{ $json.booking_date }} at {{ $json.booking_time }}\n💷 £{{ $json.price_gbp }} received\n\n🎉 See you at the chair!",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000002",
+      "name": "Notify Owner — Paid",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [460, 180],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_YOUR_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Bookings",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Booking ID": "={{ $json.id }}",
+            "Customer Name": "={{ $json.customer_name }}",
+            "Phone": "={{ $json.customer_phone }}",
+            "Email": "={{ $json.customer_email }}",
+            "Service": "={{ $json.service_name }}",
+            "Date": "={{ $json.booking_date }}",
+            "Time": "={{ $json.booking_time }}",
+            "Price (£)": "={{ $json.price_gbp }}",
+            "Status": "Confirmed — Paid",
+            "Created At": "={{ $json.created_at }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "b2c3d4e5-0002-0002-0002-000000000003",
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [460, 420],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_YOUR_GOOGLE_CREDENTIAL_ID",
+          "name": "Google Sheets Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Payment Confirmed Webhook": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner — Paid",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

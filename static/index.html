@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book Your Appointment</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0d0d;
+      color: #f0ece4;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #111;
+      border-bottom: 2px solid #c9a84c;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .logo-circle {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .header-text h1 {
+      font-size: 19px; font-weight: 800;
+      letter-spacing: 2px; text-transform: uppercase; color: #c9a84c;
+    }
+    .header-text p { font-size: 11px; color: #666; letter-spacing: 1px; margin-top: 2px; }
+
+    .header-badge {
+      margin-left: auto;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      padding: 6px 12px; border-radius: 20px;
+      font-size: 11px; color: #888;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dot { width: 6px; height: 6px; background: #4caf50; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Chat area ── */
+    #chat-area {
+      flex: 1; overflow-y: auto; padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      scroll-behavior: smooth;
+    }
+
+    .bubble-wrap { display: flex; }
+    .bubble-wrap.user { justify-content: flex-end; }
+    .bubble-wrap.bot  { justify-content: flex-start; align-items: flex-end; gap: 8px; }
+
+    .avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+
+    .bubble {
+      max-width: 72%; padding: 12px 16px;
+      border-radius: 18px; line-height: 1.55; font-size: 14.5px;
+      animation: pop .18s ease;
+    }
+    @keyframes pop { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+
+    .bubble.bot  {
+      background: #1c1c1c; border: 1px solid #2a2a2a;
+      border-bottom-left-radius: 4px; color: #f0ece4;
+    }
+    .bubble.user {
+      background: linear-gradient(135deg, #c9a84c, #b8933e);
+      color: #0d0d0d; font-weight: 600;
+      border-bottom-right-radius: 4px;
+    }
+
+    /* typing indicator */
+    .typing-bubble {
+      background: #1c1c1c; border: 1px solid #2a2a2a;
+      padding: 14px 18px; border-radius: 18px; border-bottom-left-radius: 4px;
+      display: flex; gap: 5px; align-items: center;
+    }
+    .typing-bubble span {
+      width: 7px; height: 7px; background: #c9a84c;
+      border-radius: 50%; animation: bounce 1.1s infinite;
+    }
+    .typing-bubble span:nth-child(2) { animation-delay: .18s; }
+    .typing-bubble span:nth-child(3) { animation-delay: .36s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0);opacity:.3} 30%{transform:translateY(-5px);opacity:1} }
+
+    /* ── Pay banner ── */
+    #pay-banner {
+      margin: 0 16px 12px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, #1a1a1a, #222);
+      border: 1px solid #c9a84c;
+      border-radius: 14px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    #pay-banner .pay-info strong { display: block; color: #c9a84c; font-size: 14px; }
+    #pay-banner .pay-info span   { font-size: 12px; color: #888; }
+
+    #pay-btn {
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      color: #0d0d0d; border: none; padding: 11px 22px;
+      border-radius: 10px; font-size: 14px; font-weight: 800;
+      cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+      white-space: nowrap; transition: opacity .15s;
+    }
+    #pay-btn:hover  { opacity: .9; }
+    #pay-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── Input area ── */
+    #input-area {
+      padding: 12px 16px;
+      background: #111; border-top: 1px solid #1e1e1e;
+      display: flex; gap: 10px; align-items: center;
+      flex-shrink: 0;
+    }
+    #user-input {
+      flex: 1; background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 24px; padding: 12px 18px;
+      color: #f0ece4; font-size: 14.5px; outline: none;
+      transition: border-color .15s;
+    }
+    #user-input:focus      { border-color: #c9a84c; }
+    #user-input::placeholder { color: #444; }
+
+    #send-btn {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: linear-gradient(135deg, #c9a84c, #e8c96a);
+      border: none; cursor: pointer; font-size: 19px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: opacity .15s;
+    }
+    #send-btn:hover    { opacity: .85; }
+    #send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* scrollbar */
+    #chat-area::-webkit-scrollbar { width: 4px; }
+    #chat-area::-webkit-scrollbar-track { background: transparent; }
+    #chat-area::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-circle">✂️</div>
+    <div class="header-text">
+      <h1 id="shop-name">Loading…</h1>
+      <p>AI BOOKING ASSISTANT</p>
+    </div>
+    <div class="header-badge"><span class="dot"></span>Available 24/7</div>
+  </header>
+
+  <div id="chat-area"></div>
+
+  <div id="pay-banner">
+    <div class="pay-info">
+      <strong>Appointment reserved!</strong>
+      <span>Complete payment to confirm your slot</span>
+    </div>
+    <button id="pay-btn" onclick="payNow()">Pay Now 💳</button>
+  </div>
+
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="Message Max…" autocomplete="off" />
+    <button id="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+
+<script>
+  // ── Session ──
+  let sessionId = localStorage.getItem('bb_session');
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem('bb_session', sessionId);
+  }
+
+  let bookingId = localStorage.getItem('bb_booking_id')
+    ? parseInt(localStorage.getItem('bb_booking_id'))
+    : null;
+
+  // ── DOM refs ──
+  const chatArea  = document.getElementById('chat-area');
+  const input     = document.getElementById('user-input');
+  const sendBtn   = document.getElementById('send-btn');
+  const payBanner = document.getElementById('pay-banner');
+
+  // ── Load config ──
+  fetch('/api/config')
+    .then(r => r.json())
+    .then(cfg => {
+      document.getElementById('shop-name').textContent = cfg.shop_name || 'Elite Cuts';
+      document.title = (cfg.shop_name || 'Elite Cuts') + ' — Book Your Appointment';
+    });
+
+  // ── If a booking already exists, show pay banner ──
+  if (bookingId) {
+    payBanner.style.display = 'flex';
+  }
+
+  // ── Helpers ──
+  function addBubble(text, sender) {
+    const wrap = document.createElement('div');
+    wrap.className = `bubble-wrap ${sender}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${sender}`;
+    bubble.textContent = text;
+
+    if (sender === 'bot') {
+      const av = document.createElement('div');
+      av.className = 'avatar';
+      av.textContent = '✂️';
+      wrap.appendChild(av);
+    }
+
+    wrap.appendChild(bubble);
+    chatArea.appendChild(wrap);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    return bubble;
+  }
+
+  let typingEl = null;
+  function showTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'bubble-wrap bot';
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    av.textContent = '✂️';
+    const tb = document.createElement('div');
+    tb.className = 'typing-bubble';
+    tb.innerHTML = '<span></span><span></span><span></span>';
+    wrap.appendChild(av);
+    wrap.appendChild(tb);
+    chatArea.appendChild(wrap);
+    chatArea.scrollTop = chatArea.scrollHeight;
+    typingEl = wrap;
+  }
+
+  function hideTyping() {
+    if (typingEl) { typingEl.remove(); typingEl = null; }
+  }
+
+  function setLoading(on) {
+    sendBtn.disabled = on;
+    input.disabled   = on;
+  }
+
+  // ── Send message ──
+  async function sendMessage(overrideText) {
+    const text = overrideText !== undefined ? overrideText : input.value.trim();
+    if (!text) return;
+    if (!overrideText) {
+      input.value = '';
+      addBubble(text, 'user');
+    }
+
+    setLoading(true);
+    showTyping();
+
+    try {
+      const res  = await fetch('/api/chat', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ session_id: sessionId, message: text }),
+      });
+      const data = await res.json();
+      hideTyping();
+      addBubble(data.message, 'bot');
+
+      if (data.booking_id) {
+        bookingId = data.booking_id;
+        localStorage.setItem('bb_booking_id', bookingId);
+        payBanner.style.display = 'flex';
+      }
+    } catch {
+      hideTyping();
+      addBubble('Sorry, I hit a technical problem. Please try again in a moment.', 'bot');
+    }
+
+    setLoading(false);
+    input.focus();
+  }
+
+  // ── Pay ──
+  async function payNow() {
+    if (!bookingId) return;
+    const btn = document.getElementById('pay-btn');
+    btn.textContent = 'Redirecting…';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch(`/api/payment/create-session/${bookingId}`, { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No URL');
+      }
+    } catch {
+      btn.textContent = 'Pay Now 💳';
+      btn.disabled = false;
+      alert('Payment error — please try again.');
+    }
+  }
+
+  // ── Enter key ──
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  // ── Auto-greet on first load ──
+  window.addEventListener('load', () => {
+    setTimeout(() => sendMessage('__start__'), 400);
+  });
+</script>
+</body>
+</html>
