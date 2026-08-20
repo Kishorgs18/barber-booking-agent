@@ -1,0 +1,42 @@
+# Render Blueprint — deploy this FastAPI app as a free web service.
+# In Render: New + → Blueprint → connect this repo → it reads this file.
+# Secrets (sync: false) are NOT stored here — you set them in the Render dashboard.
+services:
+  - type: web
+    name: barber-booking-agent
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # ── set these in the Render dashboard (Environment tab) ──
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: BASE_URL          # set to your Render URL after first deploy, e.g. https://barber-booking-agent.onrender.com
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SMTP_EMAIL
+        sync: false
+      - key: SMTP_APP_PASSWORD
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: BARBER_EMAIL
+        sync: false
+      # ── non-secret, safe defaults ──
+      - key: SHOP_NAME
+        value: "Elite Barbers"

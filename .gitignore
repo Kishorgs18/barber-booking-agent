@@ -3,3 +3,4 @@ barber.db
 __pycache__/
 *.pyc
 .DS_Store
+go-live.sh

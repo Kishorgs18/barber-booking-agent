@@ -9,8 +9,8 @@ STRIPE_SECRET_KEY   = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_PUB_KEY      = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_WEBHOOK_SEC  = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 BASE_URL            = os.getenv("BASE_URL", "http://localhost:8000")
-SHOP_NAME           = os.getenv("SHOP_NAME", "Elite Cuts")
-ADMIN_PASSWORD      = os.getenv("ADMIN_PASSWORD", "admin123")
+SHOP_NAME           = os.getenv("SHOP_NAME", "Elite Barbers")
+ADMIN_PASSWORD      = os.getenv("ADMIN_PASSWORD", "CHANGE_ME_SET_ADMIN_PASSWORD_IN_ENV")
 N8N_WEBHOOK_BASE    = os.getenv("N8N_WEBHOOK_BASE_URL", "")
 
 # ── Email (Gmail SMTP) ─────────────────────────────────────────────────────────
