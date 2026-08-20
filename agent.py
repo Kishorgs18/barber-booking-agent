@@ -130,7 +130,7 @@ _agent = None
 def _get_agent():
     global _agent
     if _agent is None:
-        llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.3)
+        llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0.3, reasoning_effort="low")
         _agent = create_react_agent(llm, [get_services, check_availability, create_booking])
     return _agent
 
